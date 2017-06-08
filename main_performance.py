@@ -3,6 +3,10 @@ from WindPy import w
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+#import matplotlib.dates as mdates
+os.system('cls')
 
 def ComputeCumuReturn(netValue):
     return netValue[-1]/netValue[0]-1
@@ -44,12 +48,10 @@ if __name__ == '__main__':
     ######## Preprocessing ########
     # Parameters
     fileName1 = 'PnL_1.csv'
-    fileName2 = 'PnL_2.csv'
-    
+    fileName2 = 'PnL_2.csv'    
     # Read the data from the files
     data1 = pd.read_csv(fileName1)
-    data2 = pd.read_csv(fileName2)
-    
+    data2 = pd.read_csv(fileName2)    
     # link two dataframes
     startDate = str(data1.date[0])
     lastDate = str(data2.date[len(data2)-1])
@@ -66,6 +68,15 @@ if __name__ == '__main__':
     
     ######## Get the net value of the strategy ########
     # Concatenate two net value sequences
+    data = data1.append(data2)
+    data.index = range(len(data))
+    temp = data['date'].astype(str)
+    tradingDays = []
+    for i in range(len(temp)):
+        curDay = temp[i]
+        tradingDays.append(curDay)
+            
+    # Concatenate two net value sequences
     netValue1 = np.array(data1.net_value)
     netValue2 = np.array(data2.net_value)
     netValue = np.zeros(len(netValue1)+len(netValue2))
@@ -74,22 +85,29 @@ if __name__ == '__main__':
         if i == 0:
             netValue[len(netValue1)] = netValue[len(netValue1)-1]
         else:
-            netValue[len(netValue1)+i] = netValue[len(netValue1)+i-1]*(netValue2[i]/netValue2[i-1])
-   
+            netValue[len(netValue1)+i] = netValue[len(netValue1)+i-1]*(netValue2[i]/netValue2[i-1])   
     # Compute strategy stats
     strategyStats = ComputeStats(netValue)
     print '%.4f %.4f %.4f %.4f' % tuple(strategyStats)
     
     ######## Plot figures ########
+    # Parameters    
     titleStr1 = 'Net value ' + startDate + ' to ' + lastDate
     titleStr2 = 'ZZ500 ' + startDate + ' to ' + lastDate
+    xs = [datetime.strptime(d, '%Y%m%d').date() for d in tradingDays]
+    
     plt.figure(1)
+    # Subfigure 1
     plt.subplot(2, 1, 1)
+#    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y%m%d'))
+#    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+#    plt.plot(xs, netValue)
     plt.plot(netValue)
     plt.title(titleStr1)
     plt.xlabel('Day')
     plt.ylabel('Net value')
     plt.grid(axis = u'both')
+    # Subfigure 2
     plt.subplot(2, 1, 2)
     plt.plot(indexData)
     plt.title(titleStr2)
